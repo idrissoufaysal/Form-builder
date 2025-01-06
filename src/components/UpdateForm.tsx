@@ -7,20 +7,32 @@ import { useFormStore } from '@/store/formStore';
 import { Plus, X } from 'lucide-react';
 import { CustomForm, FormField, FieldType } from '@/types/form';
 
-interface NewFormDialogProps {
+interface UpdateFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  formId?: string;
 }
 
-export const NewFormDialog: React.FC<NewFormDialogProps> = ({
+export const UpdateFormDialog: React.FC<UpdateFormDialogProps> = ({
   open,
   onOpenChange,
+  formId,
 }) => {
-  const addForm = useFormStore((state) => state.addForm);
-  const [title, setTitle] = React.useState('');
-  const [description, setDescription] = React.useState('');
-  const [fields, setFields] = React.useState<FormField[]>([]);
+  const updateForm = useFormStore((state) => state.updateForm);
+  const currentForm = useFormStore((state) =>
+    state.forms.find((f) => f.id === formId)
+  );
 
+  // États pour gérer les champs du formulaire
+  const [title, setTitle] = React.useState(currentForm?.title || '');
+  const [description, setDescription] = React.useState(
+    currentForm?.description || ''
+  );
+  const [fields, setFields] = React.useState<FormField[]>(
+    currentForm?.fields || []
+  );
+
+  // Ajouter un nouveau champ
   const handleAddField = () => {
     const newField: FormField = {
       id: crypto.randomUUID(),
@@ -32,10 +44,12 @@ export const NewFormDialog: React.FC<NewFormDialogProps> = ({
     setFields([...fields, newField]);
   };
 
+  // Supprimer un champ
   const handleRemoveField = (id: string) => {
     setFields(fields.filter((field) => field.id !== id));
   };
 
+  // Mettre à jour un champ
   const handleFieldChange = (id: string, updates: Partial<FormField>) => {
     setFields(
       fields.map((field) =>
@@ -44,35 +58,31 @@ export const NewFormDialog: React.FC<NewFormDialogProps> = ({
     );
   };
 
+  // Soumettre les modifications
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    const newForm: CustomForm = {
-      id: crypto.randomUUID(),
+
+    if (!currentForm) return;
+
+    const updatedForm: CustomForm = {
+      ...currentForm,
       title,
       description,
       fields,
-      createdAt: new Date(),
       updatedAt: new Date(),
     };
-    
-    addForm(newForm);
+
+    updateForm(currentForm.id,updatedForm);
     onOpenChange(false);
-    
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setFields([]);
   };
 
   return (
-    
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Créer un nouveau formulaire</DialogTitle>
+          <DialogTitle>Modifier le formulaire</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div>
@@ -85,7 +95,7 @@ export const NewFormDialog: React.FC<NewFormDialogProps> = ({
                 required
               />
             </div>
-            
+
             <div>
               <Label htmlFor="description">Description</Label>
               <Input
@@ -160,11 +170,10 @@ export const NewFormDialog: React.FC<NewFormDialogProps> = ({
             >
               Annuler
             </Button>
-            <Button type="submit">Créer le formulaire</Button>
+            <Button type="submit">Enregistrer les modifications</Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-   
   );
 };
