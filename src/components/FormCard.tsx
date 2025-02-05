@@ -1,4 +1,4 @@
-import { Trash2, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { Button } from "./ui/button";
 import { CustomForm } from "@/types/form";
 import { UpdateFormDialog } from "./UpdateForm";
@@ -11,22 +11,31 @@ import {
   CardTitle,
   CardDescription,
   CardContent,
-  
 } from "./ui/card"; // Import des composants Card de Shadcn UI
+import { DeleteAlertDialog } from "./AlertDialogue";
 
 export default function FormCard({ form }: { form: CustomForm }) {
   const deleteForm = useFormStore((state) => state.deleteForm);
   const [isUpdateDialogOpen, setIsUpdateDialogOpen] = useState(false);
   const [isFormFieldDialogOpen, setIsFormFieldDialogOpen] = useState(false);
+  const [isDeleting, setisDeleting] = useState(false);
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // Empêche la propagation du clic à la Card parente
     setIsUpdateDialogOpen(true);
   };
 
-  const handleDeleteClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Empêche la propagation du clic à la Card parente
-    deleteForm(form.id);
+  const handleDeleteClick = async () => {
+    setisDeleting(true);
+    console.log(isDeleting);
+    console.log("suppression");
+
+    try {
+      deleteForm(form.id);
+    } finally {
+      setisDeleting(false);
+    }
+    console.log(isDeleting);
   };
 
   const handleCardClick = () => {
@@ -56,13 +65,10 @@ export default function FormCard({ form }: { form: CustomForm }) {
               </Button>
 
               {/* Bouton Supprimer */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleDeleteClick} // Supprime le formulaire
-              >
-                <Trash2 className="h-4 w-4 text-red-500" />
-              </Button>
+              <DeleteAlertDialog
+                isDeleting={isDeleting}
+                onDelete={handleDeleteClick}
+              />
             </div>
           </div>
         </CardHeader>
